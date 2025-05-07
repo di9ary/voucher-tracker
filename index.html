@@ -118,19 +118,15 @@
             flex-basis: 50%;
             font-size: 0.95em;
         }
-        .voucher-row input[type="number"] {
-            width: 60px;
+        /* Updated CSS for select element */
+        .voucher-row select.voucher-quantity {
+            width: 70px; /* Adjusted width for select */
             padding: 8px;
             border: 1px solid #ddd;
             border-radius: 4px;
             text-align: center;
             font-size: 1em;
-            -moz-appearance: textfield; /* Firefox */
-        }
-        .voucher-row input[type="number"]::-webkit-outer-spin-button,
-        .voucher-row input[type="number"]::-webkit-inner-spin-button {
-            -webkit-appearance: none; /* Safari and Chrome */
-            margin: 0;
+            background-color: white; /* Ensure select background is white */
         }
 
         @media (max-width: 600px) {
@@ -163,7 +159,6 @@
         const denominations = [10, 20, 30, 50, 100, 150, 200];
         const maxQuantityPerDenomination = 3;
 
-        // Calculate maximum possible total for one bank for bar scaling
         const maxPossibleBankTotal = denominations.reduce((sum, d) => sum + d * maxQuantityPerDenomination, 0);
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -180,7 +175,6 @@
                 if (storedData) {
                     return JSON.parse(storedData);
                 }
-                // Initialize empty data structure
                 const initialData = {};
                 banks.forEach(bank => {
                     initialData[bank.id] = {};
@@ -202,8 +196,8 @@
             }
 
             function updateSummary() {
-                summaryContainer.innerHTML = ''; // Clear previous summary
-                let overallMaxTotal = 0; // To find the max total among current banks for relative bar scaling if preferred
+                summaryContainer.innerHTML = '';
+                let overallMaxTotal = 0;
 
                 banks.forEach(bank => {
                     const total = calculateBankTotal(bank.id);
@@ -221,64 +215,71 @@
                     summaryContainer.appendChild(summaryDiv);
                 });
                 
-                // Update bars after all totals are known
-                // Use maxPossibleBankTotal for a fixed scale, or overallMaxTotal for a dynamic relative scale.
-                // For consistency and showing potential, using maxPossibleBankTotal.
-                const scaleMax = maxPossibleBankTotal > 0 ? maxPossibleBankTotal : 1; // Avoid division by zero
+                const scaleMax = maxPossibleBankTotal > 0 ? maxPossibleBankTotal : 1;
 
                 banks.forEach(bank => {
                      const total = calculateBankTotal(bank.id);
                      const barElement = document.getElementById(`${bank.id}Bar`);
                      if (barElement) {
                         const percentage = (total / scaleMax) * 100;
-                        barElement.style.width = `${Math.min(percentage, 100)}%`; // Cap at 100%
-                        // barElement.textContent = `${total} MOP`; // Optional: text inside bar
+                        barElement.style.width = `${Math.min(percentage, 100)}%`;
                      }
                 });
             }
 
             function renderInputs() {
-                inputContainer.innerHTML = ''; // Clear previous inputs
+                inputContainer.innerHTML = '';
                 banks.forEach(bank => {
                     const sectionDiv = document.createElement('div');
                     sectionDiv.className = 'bank-input-section';
                     sectionDiv.id = `${bank.id}InputSection`;
 
-                    let sectionHTML = `<h3>${bank.name}</h3>`;
+                    let sectionHeaderHTML = `<h3>${bank.name}</h3>`;
+                    sectionDiv.innerHTML = sectionHeaderHTML; // Add header first
+
                     denominations.forEach(denom => {
                         const currentValue = appData[bank.id]?.[denom] || 0;
-                        sectionHTML += `
-                            <div class="voucher-row">
-                                <label for="${bank.id}-${denom}">${denom} MOP 券:</label>
-                                <input type="number" id="${bank.id}-${denom}" class="voucher-quantity"
-                                       data-bank="${bank.id}" data-denomination="${denom}"
-                                       min="0" max="${maxQuantityPerDenomination}" value="${currentValue}">
-                            </div>
-                        `;
+                        
+                        const voucherRowDiv = document.createElement('div');
+                        voucherRowDiv.className = 'voucher-row';
+
+                        const label = document.createElement('label');
+                        label.setAttribute('for', `${bank.id}-${denom}`);
+                        label.textContent = `${denom} MOP 券:`;
+                        
+                        const select = document.createElement('select');
+                        select.id = `${bank.id}-${denom}`;
+                        select.className = 'voucher-quantity';
+                        select.dataset.bank = bank.id;
+                        select.dataset.denomination = denom;
+
+                        for (let i = 0; i <= maxQuantityPerDenomination; i++) {
+                            const option = document.createElement('option');
+                            option.value = i;
+                            option.textContent = i;
+                            if (i === currentValue) {
+                                option.selected = true;
+                            }
+                            select.appendChild(option);
+                        }
+                        
+                        voucherRowDiv.appendChild(label);
+                        voucherRowDiv.appendChild(select);
+                        sectionDiv.appendChild(voucherRowDiv);
                     });
-                    sectionDiv.innerHTML = sectionHTML;
                     inputContainer.appendChild(sectionDiv);
                 });
 
-                // Add event listeners to new inputs
                 document.querySelectorAll('.voucher-quantity').forEach(input => {
                     input.addEventListener('change', handleInputChange);
-                    input.addEventListener('input', handleInputChange); // For immediate feedback as user types
                 });
             }
 
             function handleInputChange(event) {
                 const bankId = event.target.dataset.bank;
                 const denomination = parseInt(event.target.dataset.denomination);
-                let quantity = parseInt(event.target.value);
-
-                // Validate quantity
-                if (isNaN(quantity) || quantity < 0) {
-                    quantity = 0;
-                } else if (quantity > maxQuantityPerDenomination) {
-                    quantity = maxQuantityPerDenomination;
-                }
-                event.target.value = quantity; // Correct the input field if value was out of bounds
+                // Value from select is already validated by its options
+                let quantity = parseInt(event.target.value); 
 
                 if (!appData[bankId]) {
                     appData[bankId] = {};
@@ -286,10 +287,9 @@
                 appData[bankId][denomination] = quantity;
 
                 saveData(appData);
-                updateSummary(); // Update the summary and bar for the specific bank
+                updateSummary();
             }
 
-            // Initial setup
             renderInputs();
             updateSummary();
         });
