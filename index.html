@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>消費券管理</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f8;
+            color: #333;
+        }
+        header {
+            background-color: #007bff;
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        header h1 {
+            margin: 0;
+            font-size: 1.5em;
+        }
+        #summaryContainer {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            padding: 15px;
+            background-color: white;
+            margin-top: 1px; /* Visual separation from header */
+        }
+        .bank-summary {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            padding: 15px;
+            margin: 10px;
+            width: calc(50% - 40px); /* Two items per row on wider screens */
+            min-width: 150px; /* Minimum width for smaller items */
+            box-sizing: border-box;
+            text-align: center;
+        }
+        .bank-summary h2 {
+            margin-top: 0;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+            color: #007bff;
+        }
+        .bank-summary .total-amount {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #28a745;
+            margin-bottom: 10px;
+        }
+        .bar-container {
+            background-color: #e9ecef;
+            border-radius: 4px;
+            height: 20px;
+            width: 100%;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+        .bar {
+            background-color: #28a745;
+            height: 100%;
+            width: 0%; /* Initial width */
+            border-radius: 4px;
+            transition: width 0.5s ease-in-out;
+            text-align: right;
+            line-height: 20px;
+            font-size: 0.8em;
+            color: white;
+            padding-right: 5px;
+            box-sizing: border-box;
+        }
+
+        main {
+            padding: 15px;
+        }
+        main h1 {
+            text-align: center;
+            color: #333;
+            font-size: 1.3em;
+            margin-bottom: 20px;
+        }
+        #inputContainer {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .bank-input-section {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .bank-input-section h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #007bff;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        .voucher-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .voucher-row:last-child {
+            border-bottom: none;
+        }
+        .voucher-row label {
+            flex-basis: 50%;
+            font-size: 0.95em;
+        }
+        .voucher-row input[type="number"] {
+            width: 60px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 1em;
+            -moz-appearance: textfield; /* Firefox */
+        }
+        .voucher-row input[type="number"]::-webkit-outer-spin-button,
+        .voucher-row input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none; /* Safari and Chrome */
+            margin: 0;
+        }
+
+        @media (max-width: 600px) {
+            .bank-summary {
+                width: calc(100% - 20px); /* Full width on small screens */
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>消費券總覽</h1>
+        <div id="summaryContainer">
+            </div>
+    </header>
+
+    <main>
+        <h1>輸入各銀行消費券數量</h1>
+        <div id="inputContainer">
+            </div>
+    </main>
+
+    <script>
+        const banks = [
+            { id: 'mpay', name: 'Mpay' },
+            { id: 'boc', name: '中銀' },
+            { id: 'icbc', name: '工商' },
+            { id: 'taifung', name: '大豐' }
+        ];
+        const denominations = [10, 20, 30, 50, 100, 150, 200];
+        const maxQuantityPerDenomination = 3;
+
+        // Calculate maximum possible total for one bank for bar scaling
+        const maxPossibleBankTotal = denominations.reduce((sum, d) => sum + d * maxQuantityPerDenomination, 0);
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const summaryContainer = document.getElementById('summaryContainer');
+            const inputContainer = document.getElementById('inputContainer');
+            let appData = loadData();
+
+            function saveData(data) {
+                localStorage.setItem('consumptionVoucherData', JSON.stringify(data));
+            }
+
+            function loadData() {
+                const storedData = localStorage.getItem('consumptionVoucherData');
+                if (storedData) {
+                    return JSON.parse(storedData);
+                }
+                // Initialize empty data structure
+                const initialData = {};
+                banks.forEach(bank => {
+                    initialData[bank.id] = {};
+                    denominations.forEach(denom => {
+                        initialData[bank.id][denom] = 0;
+                    });
+                });
+                return initialData;
+            }
+
+            function calculateBankTotal(bankId) {
+                let total = 0;
+                if (appData[bankId]) {
+                    for (const denom in appData[bankId]) {
+                        total += parseInt(denom) * parseInt(appData[bankId][denom]);
+                    }
+                }
+                return total;
+            }
+
+            function updateSummary() {
+                summaryContainer.innerHTML = ''; // Clear previous summary
+                let overallMaxTotal = 0; // To find the max total among current banks for relative bar scaling if preferred
+
+                banks.forEach(bank => {
+                    const total = calculateBankTotal(bank.id);
+                    if (total > overallMaxTotal) overallMaxTotal = total;
+
+                    const summaryDiv = document.createElement('div');
+                    summaryDiv.className = 'bank-summary';
+                    summaryDiv.innerHTML = `
+                        <h2>${bank.name}</h2>
+                        <div class="total-amount" id="${bank.id}Total">${total} MOP</div>
+                        <div class="bar-container">
+                            <div id="${bank.id}Bar" class="bar"></div>
+                        </div>
+                    `;
+                    summaryContainer.appendChild(summaryDiv);
+                });
+                
+                // Update bars after all totals are known
+                // Use maxPossibleBankTotal for a fixed scale, or overallMaxTotal for a dynamic relative scale.
+                // For consistency and showing potential, using maxPossibleBankTotal.
+                const scaleMax = maxPossibleBankTotal > 0 ? maxPossibleBankTotal : 1; // Avoid division by zero
+
+                banks.forEach(bank => {
+                     const total = calculateBankTotal(bank.id);
+                     const barElement = document.getElementById(`${bank.id}Bar`);
+                     if (barElement) {
+                        const percentage = (total / scaleMax) * 100;
+                        barElement.style.width = `${Math.min(percentage, 100)}%`; // Cap at 100%
+                        // barElement.textContent = `${total} MOP`; // Optional: text inside bar
+                     }
+                });
+            }
+
+            function renderInputs() {
+                inputContainer.innerHTML = ''; // Clear previous inputs
+                banks.forEach(bank => {
+                    const sectionDiv = document.createElement('div');
+                    sectionDiv.className = 'bank-input-section';
+                    sectionDiv.id = `${bank.id}InputSection`;
+
+                    let sectionHTML = `<h3>${bank.name}</h3>`;
+                    denominations.forEach(denom => {
+                        const currentValue = appData[bank.id]?.[denom] || 0;
+                        sectionHTML += `
+                            <div class="voucher-row">
+                                <label for="${bank.id}-${denom}">${denom} MOP 券:</label>
+                                <input type="number" id="${bank.id}-${denom}" class="voucher-quantity"
+                                       data-bank="${bank.id}" data-denomination="${denom}"
+                                       min="0" max="${maxQuantityPerDenomination}" value="${currentValue}">
+                            </div>
+                        `;
+                    });
+                    sectionDiv.innerHTML = sectionHTML;
+                    inputContainer.appendChild(sectionDiv);
+                });
+
+                // Add event listeners to new inputs
+                document.querySelectorAll('.voucher-quantity').forEach(input => {
+                    input.addEventListener('change', handleInputChange);
+                    input.addEventListener('input', handleInputChange); // For immediate feedback as user types
+                });
+            }
+
+            function handleInputChange(event) {
+                const bankId = event.target.dataset.bank;
+                const denomination = parseInt(event.target.dataset.denomination);
+                let quantity = parseInt(event.target.value);
+
+                // Validate quantity
+                if (isNaN(quantity) || quantity < 0) {
+                    quantity = 0;
+                } else if (quantity > maxQuantityPerDenomination) {
+                    quantity = maxQuantityPerDenomination;
+                }
+                event.target.value = quantity; // Correct the input field if value was out of bounds
+
+                if (!appData[bankId]) {
+                    appData[bankId] = {};
+                }
+                appData[bankId][denomination] = quantity;
+
+                saveData(appData);
+                updateSummary(); // Update the summary and bar for the specific bank
+            }
+
+            // Initial setup
+            renderInputs();
+            updateSummary();
+        });
+    </script>
+</body>
+</html>
