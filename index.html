@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>消費券計算器</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>消費券總金額</h1>
+        <p id="totalAmount">總計: $0</p >
+
+        <div class="bar-chart-container">
+            <div class="bar-item">
+                <div class="bar mpay-bar" data-bank="Mpay" id="mpayBar"></div>
+                <span class="bank-label">Mpay</span>
+                <span class="bar-amount" id="mpayBarAmount">$0</span>
+            </div>
+            <div class="bar-item">
+                <div class="bar boc-bar" data-bank="中銀" id="bocBar"></div>
+                <span class="bank-label">中銀</span>
+                 <span class="bar-amount" id="bocBarAmount">$0</span>
+            </div>
+            <div class="bar-item">
+                <div class="bar icbc-bar" data-bank="工商" id="icbcBar"></div>
+                <span class="bank-label">工商</span>
+                 <span class="bar-amount" id="icbcBarAmount">$0</span>
+            </div>
+             <div class="bar-item">
+                <div class="bar taifung-bar" data-bank="大豐" id="taifungBar"></div>
+                <span class="bank-label">大豐</span>
+                 <span class="bar-amount" id="taifungBarAmount">$0</span>
+            </div>
+        </div>
+
+        <h2>各銀行消費記錄</h2>
+
+        <div class="bank-section" data-bank="Mpay">
+            <h3>Mpay</h3>
+            <div class="bank-info">
+                 <label for="mpayQuantity">消費券數量:</label>
+                <select id="mpayQuantity" class="quantity-select">
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                </select>
+                 <span class="selected-quantity-display" id="mpayQuantityDisplay">(已選: 0)</span>
+            </div>
+            <p>當前累計金額: <span class="bank-current-amount" id="mpayAmount">$0</span></p >
+            <div class="amount-buttons">
+                <button class="amount-button" data-amount="10">$10</button>
+                <button class="amount-button" data-amount="20">$20</button>
+                <button class="amount-button" data-amount="30">$30</button>
+                <button class="amount-button" data-amount="50">$50</button>
+                <button class="amount-button" data-amount="100">$100</button>
+                <button class="amount-button" data-amount="150">$150</button>
+                <button class="amount-button" data-amount="200">$200</button>
+            </div>
+        </div>
+
+        <div class="bank-section" data-bank="中銀">
+            <h3>中銀</h3>
+            <div class="bank-info">
+                <label for="bocQuantity">消費券數量:</label>
+                <select id="bocQuantity" class="quantity-select">
+                     <option value="0">0</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                </select>
+                 <span class="selected-quantity-display" id="bocQuantityDisplay">(已選: 0)</span>
+            </div>
+             <p>當前累計金額: <span class="bank-current-amount" id="bocAmount">$0</span></p >
+            <div class="amount-buttons">
+                 <button class="amount-button" data-amount="10">$10</button>
+                <button class="amount-button" data-amount="20">$20</button>
+                <button class="amount-button" data-amount="30">$30</button>
+                <button class="amount-button" data-amount="50">$50</button>
+                <button class="amount-button" data-amount="100">$100</button>
+                <button class="amount-button" data-amount="150">$150</button>
+                <button class="amount-button" data-amount="200">$200</button>
+            </div>
+        </div>
+
+        <div class="bank-section" data-bank="工商">
+            <h3>工商</h3>
+            <div class="bank-info">
+                <label for="icbcQuantity">消費券數量:</label>
+                <select id="icbcQuantity" class="quantity-select">
+                     <option value="0">0</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                </select>
+                 <span class="selected-quantity-display" id="icbcQuantityDisplay">(已選: 0)</span>
+            </div>
+             <p>當前累計金額: <span class="bank-current-amount" id="icbcAmount">$0</span></p >
+            <div class="amount-buttons">
+                 <button class="amount-button" data-amount="10">$10</button>
+                <button class="amount-button" data-amount="20">$20</button>
+                <button class="amount-button" data-amount="30">$30</button>
+                <button class="amount-button" data-amount="50">$50</button>
+                <button class="amount-button" data-amount="100">$100</button>
+                <button class="amount-button" data-amount="150">$150</button>
+                <button class="amount-button" data-amount="200">$200</button>
+            </div>
+        </div>
+
+        <div class="bank-section" data-bank="大豐">
+            <h3>大豐</h3>
+            <div class="bank-info">
+                <label for="taifungQuantity">消費券數量:</label>
+                <select id="taifungQuantity" class="quantity-select">
+                     <option value="0">0</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                </select>
+                <span class="selected-quantity-display" id="taifungQuantityDisplay">(已選: 0)</span>
+            </div>
+             <p>當前累計金額: <span class="bank-current-amount" id="taifungAmount">$0</span></p >
+            <div class="amount-buttons">
+                 <button class="amount-button" data-amount="10">$10</button>
+                <button class="amount-button" data-amount="20">$20</button>
+                <button class="amount-button" data-amount="30">$30</button>
+                <button class="amount-button" data-amount="50">$50</button>
+                <button class="amount-button" data-amount="100">$100</button>
+                <button class="amount-button" data-amount="150">$150</button>
+                <button class="amount-button" data-amount="200">$200</button>
+            </div>
+        </div>
+
+         <button id="resetAll">重設所有金額及數量</button>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
